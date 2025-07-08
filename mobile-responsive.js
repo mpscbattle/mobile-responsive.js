@@ -1,21 +1,7 @@
-function parseHTMLQuestions() {
-  const questionElements = document.querySelectorAll('.question-data');
-  const questions = [];
-  questionElements.forEach(el => {
-    const qText = el.querySelector('.q').textContent.trim();
-    const opts = Array.from(el.querySelectorAll('.opt')).map(o => o.textContent.trim());
-    const ans = parseInt(el.getAttribute('data-answer'), 10);
-    questions.push({ question: qText, options: opts, answer: ans });
-  });
-  return questions;
-}
-
 let current = 0, selectedAnswers = [], quizLocked = [], correctCount = 0;
-let timer = 1200; // 20 minutes = 20 * 60 seconds
+let timer = 1200;
 let timerStarted = false;
 let timerInterval;
-
-const questions = parseHTMLQuestions();
 
 const quizDiv = document.getElementById("quiz");
 const timerDiv = document.getElementById("timer");
@@ -27,10 +13,11 @@ const reportCard = document.getElementById("reportCard");
 const analysisCard = document.getElementById("analysisCard");
 const viewAnalysisBtn = document.getElementById("viewAnalysisBtn");
 const startBtn = document.getElementById("startBtn");
-const questionNumber = document.getElementById("questionNumber");
+const questionNumberDiv = document.getElementById("questionNumber");
 
 function showQuestion(index) {
   const q = questions[index];
+  questionNumberDiv.innerText = `${index + 1}/${questions.length}`;
   let html = `<div class='question'>${q.question}</div><div class='options'>`;
   q.options.forEach((opt, i) => {
     let cls = "option";
@@ -39,7 +26,6 @@ function showQuestion(index) {
   });
   html += `</div>`;
   quizDiv.innerHTML = html;
-  questionNumber.textContent = `${index + 1} / ${questions.length}`;
 }
 
 function selectAnswer(qIndex, aIndex) {
@@ -51,8 +37,8 @@ function selectAnswer(qIndex, aIndex) {
 function updateTimer() {
   let min = Math.floor(timer / 60);
   let sec = timer % 60;
-  timerDiv.textContent = `🕛  ${min}:${sec < 10 ? '0' + sec : sec}`;
-   timer--;
+  timerDiv.textContent = `🕒 ${min}:${sec < 10 ? '0' + sec : sec}`;
+  timer--;
   if (timer < 0) {
     clearInterval(timerInterval);
     submitResults();
@@ -76,8 +62,8 @@ function submitResults() {
 
   const percent = ((correctCount / questions.length) * 100).toFixed(2);
   document.getElementById("percentage").textContent = percent;
-  document.getElementById("resultMessage").textContent =
-    percent >= 80 ? "Excellent Work" : percent >= 50 ? "Good Job" : "Keep Practicing";
+  const msg = percent >= 80 ? "Excellent Work" : percent >= 50 ? "Good Job" : "Keep Practicing";
+  document.getElementById("resultMessage").textContent = msg;
 
   quizLocked = questions.map(() => true);
 }
@@ -89,17 +75,17 @@ function showAnalysis() {
   container.innerHTML = "";
   questions.forEach((q, i) => {
     const userAnswer = selectedAnswers[i];
-    let feedback = "Not attempt this question";
+    let feedback = "Not attempt this question ";
     let feedbackClass = "not-attempted-feedback";
 
     if (userAnswer !== undefined) {
       const isCorrect = userAnswer === q.answer;
-      feedback = isCorrect ? "Your answer is correct" : "Your answer is wrong";
+      feedback = isCorrect ? "Your answer is correct " : "Your answer is wrong ";
       feedbackClass = isCorrect ? "correct-feedback" : "wrong-feedback";
     }
 
     let html = `<div class='analysis-box'>
-      <div><b>${i + 1} / ${questions.length}</b><br><br>${q.question}</div>`;
+      <div><b>Q${i + 1}:</b> ${q.question}</div>`;
     q.options.forEach((opt, j) => {
       let cls = "option";
       if (j === q.answer) cls += " correct";
@@ -118,6 +104,7 @@ nextBtn.onclick = () => { if (current < questions.length - 1) { current++; showQ
 submitBtn.onclick = submitResults;
 viewAnalysisBtn.onclick = showAnalysis;
 resetBtn.onclick = () => location.reload();
+
 startBtn.onclick = () => {
   if (!timerStarted) {
     timerInterval = setInterval(updateTimer, 1000);
