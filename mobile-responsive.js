@@ -74,7 +74,11 @@ function showAnalysis() {
       feedback = isCorrect ? "Your answer is correct " : "Your answer is wrong ";
       feedbackClass = isCorrect ? "correct-feedback" : "wrong-feedback";
     }
-    let html = `<div class='analysis-box'><div><b>Q${i + 1}:</b> ${q.question}</div>`;
+    let html = `
+      <div class='analysis-box'>
+        <div><b>Q${i + 1}:</b></div>
+        <div class='question-text-analysis'>${q.question}</div>
+    `;
     q.options.forEach((opt, j) => {
       let cls = "option";
       if (j === q.answer) cls += " correct";
@@ -96,7 +100,7 @@ startBtn.onclick = () => {
   if (!timerStarted) {
     timerInterval = setInterval(updateTimer, 1000);
     timerStarted = true;
-    startBtn.style.display = 'none';
+    startBtn.style.visibility = 'hidden';
   }
 };
 showQuestion(current);
