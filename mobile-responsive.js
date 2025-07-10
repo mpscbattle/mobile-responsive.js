@@ -1,106 +1,151 @@
-const questions = Array.from(document.querySelectorAll(".question-data")).map(q => {
-  return {
-    question: q.querySelector(".q").innerText,
-    options: Array.from(q.querySelectorAll(".opt")).map(opt => opt.innerText),
-    answer: parseInt(q.getAttribute("data-answer"))
-  };
-});
-let current = 0, selectedAnswers = [], quizLocked = [], correctCount = 0;
-let timer = 1200, timerStarted = false, timerInterval;
+document.addEventListener('DOMContentLoaded', function() {
+    const questionCards = document.querySelectorAll('.question-card');
+    const submitTestBtn = document.getElementById('submitTestBtn');
+    const resultsCard = document.getElementById('resultsCard');
+    const tryAgainBtn = document.getElementById('tryAgainBtn'); 
+    
+    const selectedAnswers = {}; // Stores {cardIndex: selectedOptionIndex}
 
-const quizDiv = document.getElementById("quiz"), timerDiv = document.getElementById("timer"),
-  prevBtn = document.getElementById("prevBtn"), nextBtn = document.getElementById("nextBtn"),
-  submitBtn = document.getElementById("submitBtn"), resetBtn = document.getElementById("resetBtn"),
-  reportCard = document.getElementById("reportCard"), analysisCard = document.getElementById("analysisCard"),
-  viewAnalysisBtn = document.getElementById("viewAnalysisBtn"), startBtn = document.getElementById("startBtn"),
-  questionNumberDiv = document.getElementById("questionNumber");
+    questionCards.forEach((card, cardIndex) => {
+        const viewAnswerBtn = card.querySelector('.view-answer-btn');
+        const answerBox = card.querySelector('.answer-box');
+        const explanationBox = card.querySelector('.explanation-box');
+        const options = card.querySelectorAll('.option');
+        const correctAnswerIndex = parseInt(card.dataset.correctAnswer); 
 
-function showQuestion(index) {
-  const q = questions[index];
-  questionNumberDiv.innerText = `${index + 1}/${questions.length}`;
-  let html = `<div class='question'>${q.question}</div><div class='options'>`;
-  q.options.forEach((opt, i) => {
-    let cls = "option";
-    if (selectedAnswers[index] === i && !quizLocked[index]) cls += " selected";
-    html += `<div class='${cls}' onclick='selectAnswer(${index}, ${i})'>${opt}</div>`;
-  });
-  html += `</div>`;
-  quizDiv.innerHTML = html;
-}
+        options.forEach(option => {
+            option.addEventListener('click', function() {
+                // When a new option is selected, clear all previous states (selected, correct, wrong)
+                options.forEach(opt => opt.classList.remove('selected', 'correct', 'wrong')); 
+                // Add 'selected' class to the newly clicked option
+                this.classList.add('selected');
+                // Store the selected answer's index for this card
+                selectedAnswers[cardIndex] = parseInt(this.dataset.optionIndex);
+            });
+        });
 
-function selectAnswer(qIndex, aIndex) {
-  if (quizLocked[qIndex]) return;
-  selectedAnswers[qIndex] = aIndex;
-  showQuestion(current);
-}
+        // Event listener for the "View Answer" button for individual question
+        if (viewAnswerBtn) {
+            viewAnswerBtn.addEventListener('click', function() {
+                // Show the answer and explanation boxes
+                if (answerBox) answerBox.style.display = 'block';
+                if (explanationBox) explanationBox.style.display = 'block';
+                
+                // Hide the "View Answer" button
+                this.style.display = 'none';
 
-function updateTimer() {
-  let min = Math.floor(timer / 60);
-  let sec = timer % 60;
-  timerDiv.textContent = `🕒 ${min}:${sec < 10 ? '0' + sec : sec}`;
-  timer--;
-  if (timer < 0) { clearInterval(timerInterval); submitResults(); }
-}
+                // Apply styling based on correct/wrong answers
+                options.forEach(option => {
+                    const optionIndex = parseInt(option.dataset.optionIndex);
+                    
+                    // Clear existing 'selected' class to ensure correct/wrong colors take precedence
+                    option.classList.remove('selected'); 
 
-function submitResults() {
-  clearInterval(timerInterval);
-  quizDiv.innerHTML = "";
-  reportCard.style.display = 'block';
-  let attempted = selectedAnswers.filter(v => v !== undefined).length;
-  correctCount = selectedAnswers.filter((v, i) => v === questions[i].answer).length;
-  document.getElementById("total").textContent = questions.length;
-  document.getElementById("attempted").textContent = attempted;
-  document.getElementById("correct").textContent = correctCount;
-  document.getElementById("wrong").textContent = attempted - correctCount;
-  document.getElementById("score").textContent = correctCount;
-  document.getElementById("totalScore").textContent = questions.length;
-  const percent = ((correctCount / questions.length) * 100).toFixed(2);
-  document.getElementById("percentage").textContent = percent;
-  const msg = percent >= 80 ? "Excellent Work" : percent >= 50 ? "Good Job" : "Keep Practicing";
-  document.getElementById("resultMessage").textContent = msg;
-  quizLocked = questions.map(() => true);
-}
+                    if (optionIndex === correctAnswerIndex) {
+                        // If this option is the correct answer, make it green
+                        option.classList.add('correct'); 
+                    } else if (selectedAnswers[cardIndex] === optionIndex) {
+                        // If user selected THIS option AND it's not the correct one, make it red
+                        option.classList.add('wrong');
+                    }
+                });
 
-function showAnalysis() {
-  analysisCard.style.display = 'block';
-  reportCard.style.display = 'none';
-  const container = document.getElementById("analysisContent");
-  container.innerHTML = "";
-  questions.forEach((q, i) => {
-    const userAnswer = selectedAnswers[i];
-    let feedback = "Not attempt this question ", feedbackClass = "not-attempted-feedback";
-    if (userAnswer !== undefined) {
-      const isCorrect = userAnswer === q.answer;
-      feedback = isCorrect ? "Your answer is correct " : "Your answer is wrong ";
-      feedbackClass = isCorrect ? "correct-feedback" : "wrong-feedback";
-    }
-    let html = `
-      <div class='analysis-box'>
-        <div><b>Q${i + 1}:</b></div>
-        <div class='question-text-analysis'>${q.question}</div>
-    `;
-    q.options.forEach((opt, j) => {
-      let cls = "option";
-      if (j === q.answer) cls += " correct";
-      else if (j === userAnswer) cls += " wrong";
-      html += `<div class='${cls}'>${opt}</div>`;
+                // Disable further clicks on options after viewing answer for this specific question
+                options.forEach(option => option.style.pointerEvents = 'none');
+            });
+        }
     });
-    html += `<div class='feedback ${feedbackClass}'>${feedback}</div>`;
-    html += `<div style='margin-top:5px;'>👉 Correct Answer : <b>${q.options[q.answer]}</b></div></div>`;
-    container.innerHTML += html;
-  });
-}
 
-prevBtn.onclick = () => { if (current > 0) { current--; showQuestion(current); } };
-nextBtn.onclick = () => { if (current < questions.length - 1) { current++; showQuestion(current); } };
-submitBtn.onclick = submitResults;
-viewAnalysisBtn.onclick = showAnalysis;
-resetBtn.onclick = () => location.reload();
-startBtn.onclick = () => {
-  if (!timerStarted) {
-    timerInterval = setInterval(updateTimer, 1000);
-    timerStarted = true;
-    startBtn.style.visibility = 'hidden';
-  }
-};
-showQuestion(current);
+    // Event listener for the "Submit Test" (View Results) button
+    if (submitTestBtn) {
+        submitTestBtn.addEventListener('click', function() {
+            let totalQuestions = questionCards.length;
+            let attemptedQuestions = 0;
+            let correctAnswers = 0;
+            let wrongAnswers = 0;
+
+            // Loop through each question card to evaluate answers and apply styling for all
+            questionCards.forEach((card, cardIndex) => {
+                const correctAnswerIndex = parseInt(card.dataset.correctAnswer);
+                const userAnswerIndex = selectedAnswers[cardIndex]; // User's selected answer for this question
+                const options = card.querySelectorAll('.option');
+
+                // Check if the user attempted this question for scoring
+                if (userAnswerIndex !== undefined) {
+                    attemptedQuestions++;
+                    if (userAnswerIndex === correctAnswerIndex) {
+                        correctAnswers++;
+                    } else {
+                        wrongAnswers++;
+                    }
+                }
+
+                // Apply styling to options based on final evaluation
+                options.forEach(option => {
+                    const optionIndex = parseInt(option.dataset.optionIndex);
+                    // Disable further interaction for all options after submit
+                    option.style.pointerEvents = 'none'; 
+
+                    // Clear all previous states (selected, correct, wrong) before applying new ones
+                    option.classList.remove('selected', 'correct', 'wrong'); 
+                    
+                    if (optionIndex === correctAnswerIndex) {
+                        // Always highlight the correct answer in green
+                        option.classList.add('correct');
+                    } 
+                    // If user selected this option AND it's not the correct one, mark it wrong
+                    else if (userAnswerIndex === optionIndex) { 
+                        option.classList.add('wrong'); // Mark user's wrong choice in red
+                    }
+                });
+
+                // Hide individual 'View Answer' button after final submission
+                const viewAnsBtn = card.querySelector('.view-answer-btn');
+                if(viewAnsBtn) viewAnsBtn.style.display = 'none';
+
+                // Ensure explanation and answer text are shown for all questions on submit
+                const explanationBox = card.querySelector('.explanation-box');
+                const answerBox = card.querySelector('.answer-box');
+                if (answerBox) answerBox.style.display = 'block';
+                if (explanationBox) explanationBox.style.display = 'block';
+            });
+
+            // Display results in the results card
+            document.getElementById('totalQuestions').textContent = totalQuestions;
+            document.getElementById('attemptedQuestions').textContent = attemptedQuestions;
+            document.getElementById('correctAnswers').textContent = correctAnswers;
+            document.getElementById('wrongAnswers').textContent = wrongAnswers;
+            document.getElementById('yourScore').textContent = correctAnswers;
+            document.getElementById('maxScore').textContent = totalQuestions;
+
+            let message = '';
+            if (totalQuestions > 0 && correctAnswers === totalQuestions) { 
+                message = "Excellent! All answers are correct.";
+            } else if (correctAnswers === 0 && attemptedQuestions === 0) {
+                message = "You haven't attempted any questions yet!";
+            } else if (correctAnswers >= totalQuestions / 2) {
+                message = "Good job! Keep practicing!";
+            } else {
+                message = "Keep practicing to improve!";
+            }
+            document.getElementById('resultsMessage').textContent = message;
+
+            // Show the results card
+            resultsCard.style.display = 'block';
+            // Hide the submit button after results are shown
+            submitTestBtn.style.display = 'none';
+
+            // Scroll to the top of the results card
+            if (resultsCard) {
+                resultsCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    }
+
+    // Event listener for the "Try Again" button
+    if (tryAgainBtn) {
+        tryAgainBtn.addEventListener('click', function() {
+            location.reload(); // Simply reload the page to reset the quiz
+        });
+    }
+});
