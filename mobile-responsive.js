@@ -110,13 +110,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
             let message = '';
             if (totalQuestions > 0 && correctAnswers === totalQuestions) { 
-                message = "Excellent! All answers are correct.";
+                message = "Excellent ! All answers are correct";
             } else if (correctAnswers === 0 && attemptedQuestions === 0) {
-                message = "You haven't attempted any questions yet!";
+                message = "You haven't attempted any questions yet";
             } else if (correctAnswers >= totalQuestions / 2) {
-                message = "Good job! Keep practicing!";
+                message = "Good job ! Keep practicing";
             } else {
-                message = "Keep practicing to improve!";
+                message = "Keep practicing to improve";
             }
             document.getElementById('resultsMessage').textContent = message;
 
