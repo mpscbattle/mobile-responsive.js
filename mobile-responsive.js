@@ -13,15 +13,9 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    // Check if the page was reloaded with a hash for scrolling (optional, but good practice)
-    // If you want to use URL hash like #firstQuestion, uncomment and adjust this:
-    // if (window.location.hash === '#firstQuestion') {
-    //     scrollToFirstQuestion();
-    // }
-
     questionCards.forEach((card, cardIndex) => {
         const viewAnswerBtn = card.querySelector('.view-answer-btn');
-        const answerBox = card.querySelector('.answer-box');
+        const answerBox = card.querySelector('.answer-box'); 
         const explanationBox = card.querySelector('.explanation-box');
         const options = card.querySelectorAll('.option');
         const correctAnswerIndex = parseInt(card.dataset.correctAnswer); 
@@ -36,7 +30,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
         if (viewAnswerBtn) {
             viewAnswerBtn.addEventListener('click', function() {
-                if (answerBox) answerBox.style.display = 'block';
+                // Remove the line below to hide the 'Correct Answer' box
+                // if (answerBox) answerBox.style.display = 'block'; 
+                
                 if (explanationBox) explanationBox.style.display = 'block';
                 
                 this.style.display = 'none';
@@ -97,7 +93,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 const explanationBox = card.querySelector('.explanation-box');
                 const answerBox = card.querySelector('.answer-box');
-                if (answerBox) answerBox.style.display = 'block';
+                // Remove the line below to hide the 'Correct Answer' box
+                // if (answerBox) answerBox.style.display = 'block';
                 if (explanationBox) explanationBox.style.display = 'block';
             });
 
@@ -132,22 +129,10 @@ document.addEventListener('DOMContentLoaded', function() {
     // Event listener for the "Try Again" button
     if (tryAgainBtn) {
         tryAgainBtn.addEventListener('click', function() {
-            // Reload the page
             location.reload(); 
-            // Once the page is reloaded, DOMContentLoaded will fire again,
-            // and the quiz state will be reset.
-            // We can then immediately scroll to the first question.
-            // This part of the code will execute AFTER the reload, so it won't scroll immediately.
-            // To make it scroll after reload, we might need to use localStorage or URL hash.
-            // A simpler approach for direct refresh is often preferred by browsers:
-            // The browser usually scrolls to the top on reload unless a hash is present.
-            // We will add a small timeout to ensure the DOM is ready after reload for scroll.
-            setTimeout(scrollToFirstQuestion, 100); // 100ms delay to ensure render
+            setTimeout(scrollToFirstQuestion, 100); 
         });
     }
 
-    // Initial scroll to the top of the first question card when the page loads
-    // This ensures that even on first load, if the user scrolled down,
-    // they can start from the first question.
     scrollToFirstQuestion(); 
 });
