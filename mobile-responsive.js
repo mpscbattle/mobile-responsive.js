@@ -134,5 +134,5 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    scrollToFirstQuestion(); 
+    // scrollToFirstQuestion();  <-- Yeh line ab comment hai — no auto scroll on page load
 });
